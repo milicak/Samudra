@@ -1,0 +1,31 @@
+#!/bin/sh
+#SBATCH -A gooogr                            
+#SBATCH --time=240:00:00                       
+##SBATCH -p gpu2dq                              
+#SBATCH -p a100x4q                            
+#SBATCH  --job-name=Samudra
+#SBATCH --output=%j.out  
+#SBATCH --error=%j.err   
+#SBATCH  --exclusive                                 
+#SBATCH  --ntasks=64                               
+#SBATCH  --export=ALL                                
+##SBATCH --mail-user=milicak@itu.edu.tr
+##SBATCH --mail-type=FAIL
+
+
+source ~/loadmodule_python
+conda activate samudra
+cd /ari/users/milicak/python_libs/Samudra
+
+
+# torchrun src/train.py --config configs/train_samudra_om4.yaml 
+# torchrun src/train.py --config configs/train_samudra_om4.yaml --resume train/chkpts/ckpt.pt 
+# echo $CUDA_VISIBLE_DEVICES
+
+torchrun --nproc_per_node=4 src/train.py --config configs/train_samudra_bsfs.yaml 
+
+
+# torchrun --nproc_per_node=4 src/train.py --config configs/train_samudra_om4.yaml
+
+# to run the rollout
+# python src/rollout.py --config configs/rollout_samudra_om4.yaml --ckpt_path /ari/users/milicak/dataset/MOM6/OM4_Samudra/ckpt/samudra_thermo_dynamic.pt --save_zarr

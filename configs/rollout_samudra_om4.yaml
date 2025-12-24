@@ -4,7 +4,7 @@ disk_mode: true
 inference:
   start_time: "2014-09-30"
   end_time: "2022-12-24"
-ckpt_path: local/path/to/ckpt # FILL IN
+ckpt_path: /ari/users/milicak/dataset/MOM6/OM4_Samudra/ckpt # FILL IN
 num_model_steps_forward: 20 # Number of steps to run forward pass at a time
 record_every: 10 # Write to zarr every record_every steps (if save_zarr is true)
 
@@ -13,7 +13,7 @@ experiment:
   sub_name: om4_samudra
   rand_seed: 5
   base_output_dir: rollout
-  data_dir: local/path/to/data-dir # FILL IN
+  data_dir: /ari/users/milicak/dataset/MOM6/OM4_Samudra # FILL IN
   network: samudra
   prognostic_vars_key: thermo_dynamic # thermo_dynamic or thermo
   boundary_vars_key: hfds_anom

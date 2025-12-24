@@ -580,6 +580,71 @@ class Trainer:
 
         torch.save(checkpoint, checkpoint_path)
 
+    def load_checkpoint(self, checkpoint_path: str, load_optimizer: bool = True) -> None:
+        """Load checkpoint and restore model, optimizer, scheduler and training state.
+
+        Args:
+            checkpoint_path: Path to the .pt checkpoint file.
+            load_optimizer: If True, restore optimizer (and scheduler) state.
+        """
+        if not os.path.exists(checkpoint_path):
+            logging.error(f"Checkpoint not found: {checkpoint_path}")
+            return
+
+        logging.info(f"Loading checkpoint from {checkpoint_path}")
+        checkpoint = torch.load(checkpoint_path, map_location=self.device)
+
+        # Load model weights. Checkpoint stores the underlying model state_dict
+        # (saved as model.module.state_dict() when using GPU/Distributed).
+        model_to_load = self.model.module if using_gpu() else self.model
+        try:
+            model_to_load.load_state_dict(checkpoint["model"])
+        except Exception as e:
+            logging.error(f"Failed to load model state_dict: {e}")
+            raise
+
+        # Load optimizer state and move optimizer tensors to device
+        if load_optimizer and "optimizer" in checkpoint:
+            try:
+                self.optimizer.load_state_dict(checkpoint["optimizer"])
+                # Move optimizer state tensors to the correct device
+                for state in self.optimizer.state.values():
+                    for k, v in list(state.items()):
+                        if isinstance(v, torch.Tensor):
+                            state[k] = v.to(self.device)
+            except Exception as e:
+                logging.error(f"Failed to load optimizer state: {e}")
+
+        # Load scheduler if present
+        if self.scheduler and "scheduler" in checkpoint:
+            try:
+                self.scheduler.load_state_dict(checkpoint["scheduler"])
+            except Exception as e:
+                logging.error(f"Failed to load scheduler state: {e}")
+
+        # Restore epoch and best metrics
+        ck_epoch = checkpoint.get("epoch", None)
+        if ck_epoch is not None:
+            # Continue from next epoch
+            self.start_epoch = ck_epoch + 1
+
+        # Safely restore best_val_loss / best_inf_loss without assuming attributes exist
+        if "best_val_loss" in checkpoint:
+            self.best_val_loss = checkpoint["best_val_loss"]
+        else:
+            if not hasattr(self, "best_val_loss"):
+                self.best_val_loss = torch.tensor(1e8)
+
+        if "best_inf_loss" in checkpoint:
+            self.best_inf_loss = checkpoint["best_inf_loss"]
+        else:
+            if not hasattr(self, "best_inf_loss"):
+                self.best_inf_loss = torch.tensor(1e8)
+
+        logging.info(
+            f"Resuming training from epoch {self.start_epoch} (checkpoint epoch {ck_epoch})"
+        )
+
 
 def main():
     # Parse command line arguments
@@ -589,6 +654,13 @@ def main():
     )
     parser.add_argument(
         "--subname", type=str, required=False, help="Subname for the run", default=""
+    )
+    parser.add_argument(
+        "--resume",
+        type=str,
+        required=False,
+        help="Path to .pt checkpoint to resume training from",
+        default=None,
     )
     args = parser.parse_args()
 
@@ -612,6 +684,9 @@ def main():
     handle_warnings()
 
     trainer = Trainer(cfg)
+    # If resume path provided, load checkpoint before starting run
+    if args.resume:
+        trainer.load_checkpoint(args.resume)
 
     try:
         trainer.run()
