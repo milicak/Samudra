@@ -1,0 +1,47 @@
+debug: false
+save_zarr: true
+disk_mode: true
+inference:
+  start_time: "2018-01-01"
+  # end_time: "2023-12-31"
+  end_time: "2018-03-31"
+ckpt_path: /ari/users/milicak/dataset/NEMO/BSFS_Samudra/ckpt_finetune # FILL IN
+num_model_steps_forward: 20 # Number of steps to run forward pass at a time
+record_every: 10 # Write to zarr every record_every steps (if save_zarr is true)
+
+experiment:
+  name: rollout
+  sub_name: bsfs_samudra_finetune
+  rand_seed: 5
+  base_output_dir: rollout
+  data_dir: /ari/users/milicak/dataset/NEMO/BSFS_Samudra/ # FILL IN
+  network: samudra
+  prognostic_vars_key: thermo_dynamic # thermo_dynamic or thermo
+  boundary_vars_key: hfds_anom
+
+data:
+  data_path: data_finetune.zarr # FILL IN
+  data_means_path: means_finetune.zarr # FILL IN
+  data_stds_path: stds_finetune.zarr # FILL IN
+  time_delta: 1
+  num_workers: 4
+  hist: 1
+
+
+unet:
+  ch_width: [159, 160, 200, 240, 320] 
+  n_out: 154
+  dilation: [1, 2, 4, 8]
+  n_layers: [1, 1, 1, 1]
+  last_kernel_size: 3
+  pad: "constant"
+
+  core_block:
+    block_type: "conv_next_block"
+    kernel_size: 3
+    activation: "capped_gelu"
+    upscale_factor: 4
+    norm: "batch"
+
+  down_sampling_block: "avg_pool"
+  up_sampling_block: "bilinear_upsample"

@@ -82,7 +82,7 @@ PROG_VARS_MAP = {
     + ["zos"],
 }
 BOUND_VARS_MAP = {
-    "hfds_anom": ["tauuo", "tauvo", "hfds", "hfds_anomalies"],
+    "hfds_anom": ['SSTL4', "tauuo", "tauvo", "hfds", "hfds_anomalies"],
 }
 
 default_metadata = {
@@ -108,6 +108,10 @@ default_metadata = {
     },
     "tos": {
         "long_name": "Sea surface temperature",
+        "units": r"\degree C",
+    },
+    "SSTL4": {
+        "long_name": "L4 Satellite sea surface Temperature",
         "units": r"\degree C",
     },
     "tauuo": {

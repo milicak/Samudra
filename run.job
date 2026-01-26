@@ -18,6 +18,7 @@ conda activate samudra
 cd /ari/users/milicak/python_libs/Samudra
 
 # salloc --ntasks=64 --time=00:40:00 --gres=gpu:1 -p a100x4q --account=gooogr
+# THEN LOGIN WITH ssh a***
 
 # torchrun src/train.py --config configs/train_samudra_om4.yaml 
 # torchrun src/train.py --config configs/train_samudra_om4.yaml --resume train/chkpts/ckpt.pt 
@@ -28,7 +29,11 @@ cd /ari/users/milicak/python_libs/Samudra
 # second run
 # torchrun --nproc_per_node=4 src/train.py --config configs/train_samudra_bsfs.yaml --resume train/chkpts/ckpt.pt 
 # finetune run after changing src/train.py file
-torchrun --nproc_per_node=4 src/train.py --config configs/train_samudra_bsfs_finetune.yaml --resume train/chkpts/finetune_ready.pt
+# python -i add_new_weight.py 
+# python -i add_new_weight_hidden_layers.py
+# torchrun --nproc_per_node=4 src/train.py --config configs/train_samudra_bsfs_finetune.yaml --resume train/chkpts/finetune_ready_v2.pt
+# then the second run
+torchrun --nproc_per_node=4 src/train.py --config configs/train_samudra_bsfs_finetune.yaml --resume train/chkpts/ckpt_finetune_48.pt
 
 
 # torchrun --nproc_per_node=4 src/train.py --config configs/train_samudra_om4.yaml
@@ -36,3 +41,6 @@ torchrun --nproc_per_node=4 src/train.py --config configs/train_samudra_bsfs_fin
 # to run the rollout
 # python src/rollout.py --config configs/rollout_samudra_om4.yaml --ckpt_path /ari/users/milicak/dataset/MOM6/OM4_Samudra/ckpt/samudra_thermo_dynamic.pt --save_zarr
 # python src/rollout.py --config configs/rollout_samudra_bsfs.yaml --ckpt_path /ari/users/milicak/dataset/NEMO/BSFS_Samudra/ckpt/samudra_thermo_dynamic.pt --save_zarr
+
+# to run the nowcast rollout
+# python src/rollout.py --config configs/rollout_samudra_bsfs_finetune.yaml --ckpt_path /ari/users/milicak/dataset/NEMO/BSFS_Samudra/ckpt_finetune/samudra_thermo_dynamic.pt --save_zarr
